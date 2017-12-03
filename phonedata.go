@@ -150,34 +150,18 @@ func Find(phone_num string) (pr *PhoneRecord, err error) {
 			break
 		}
 		mid := (left + right) / 2
-		offset := firstoffset + mid*PHONE_INDEX_LENGTH
+		offset := firstoffset + mid * PHONE_INDEX_LENGTH
 		if offset >= total_len {
 			break
 		}
 		cur_phone := get4(content[offset : offset+INT_LEN])
-		record_offset := get4(content[offset+INT_LEN : offset+INT_LEN*2])
-		card_type := content[offset+INT_LEN*2 : offset+INT_LEN*2+CHAR_LEN][0]
 		switch {
 		case cur_phone > phone_seven_int32:
 			right = mid - 1
 		case cur_phone < phone_seven_int32:
 			left = mid + 1
 		default:
-			cbyte := content[record_offset:]
-			end_offset := int32(bytes.Index(cbyte, []byte("\000")))
-			data := bytes.Split(cbyte[:end_offset], []byte("|"))
-			card_str, ok := CardTypemap[card_type]
-			if !ok {
-				card_str = "未知电信运营商"
-			}
-			pr = &PhoneRecord{
-				PhoneNum: phone_num,
-				Province: string(data[0]),
-				City:     string(data[1]),
-				ZipCode:  string(data[2]),
-				AreaZone: string(data[3]),
-				CardType: card_str,
-			}
+			pr = FindByIndex(mid)
 			return
 		}
 	}
@@ -199,7 +183,7 @@ func FindByIndex(idx int32) (pr *PhoneRecord) {
 	pr = &PhoneRecord{
 		PhoneNum: strconv.Itoa(int(cur_phone)),
 		Province: string(data[0]),
-		City:	 string(data[1]),
+		City:     string(data[1]),
 		ZipCode:  string(data[2]),
 		AreaZone: string(data[3]),
 		CardType: card_str,
